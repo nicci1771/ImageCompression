@@ -1,0 +1,48 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{commath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{mathtools}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{longtable}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\title{Image Compression Using Deep Learning}
+\author{Manchen Wang, Qiqi Xiao, Yongchi Su
+\\ Andrew ID:  manchen2, qiqix, yongchi1}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction and Motivation}
+
+Image compression is a type of data compression applied to digital images, to reduce their cost for storage or transmission. If we can identify the structure of our input, we can eliminate this redundancy to represent it more succinctly.
+
+The image compression method can often be broken down into 3 different modules: Transformation, which maps the input to some alternative representation space more suitable for further processing; Quantization, which removes information that is deemed less important; Coding, which leverage low entropy content towards a more compact representation. Recent advances in machine learning have led to an increasing interest in applying neural networks to the problem of image compression. A natural approach to implement the encoder-decoder image compression pipeline is to use an autoencoder to map the target through a bitrate bottleneck, and train the model to minimize the loss to penalize it from its reconstruction. This requires designing a feature extractor and synthesizer for the encoder and decoder, selecting an appropriate objective, and possibly introducing a coding scheme to further compress the fixed-size representation to attain variable-length codes. At CVPR 2017, for example, one of the oral presentations ``Fsull Resolution Image Compression with Recurrent Neural Networks''\ref{toderici2016full} was discussing compression using encoder-decoder with recurrent convolutional networks. 
+
+We also plan to participate in the Workshop and Challenge on Learned Image Compression(CLIC).
+
+\section{Approach}
+
+We plan to implement a full-resolution lossy image compression method based on nerural network. The architecture consists of a recurrent neural network (RNN)-based encoder and decoder, a binarizer, and a neural network for entropy coding. 
+
+For the encoder and decoder, we plan to examine different types of recurrent units such as LSTM, Associate LSTM, GRU. For the reconstruction framework, we plan to examine different approaches to creating the final image reconstruction from the decoder outputs such as one-shot reconstruction(each iteration tries to reconstruct the full image after the decoder), additive reconstruction(each iteration tries to reconstruct the residual from the previous iterations) and residual scaling. For entropy coding, we plan to examine single iteration entropy coder and progressive entropy coding. 
+
+At last, we plan to compare our experiment results to a set of models like JPEG.
+
+
+\section{Work designation}
+
+Our approach can be divided into three parts: encoder, decoder and entropy coding. Basically, Manchen will be responsible for encoder part, Qiqi will take charge of decoder part and Yongchi will explore the entropy coding part. Since image compression using deep learning is a really new topic, we will do survey and come up with ideas together.
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{ref}
+
+\end{document}
