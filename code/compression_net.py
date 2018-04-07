@@ -6,8 +6,7 @@ from torch.autograd import Variable
 from torch.nn.modules.utils import _pair
 
 from torch.autograd import Function
-
-from modules import ConvLSTMCell, Sign
+from IPython import embed
 
 class ConvLSTM(nn.Module):
     def __init__(self,
@@ -71,7 +70,10 @@ class ConvLSTM(nn.Module):
 
     def forward(self, input, hidden):
         hx, cx = hidden
-        gates = self.conv_ih(input) + self.conv_hh(hx)
+        try:
+            gates = self.conv_ih(input) + self.conv_hh(hx)
+        except:
+            embed()
 
         ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)
 
@@ -108,12 +110,12 @@ class SignFunction(Function):
 
 class Sign(nn.Module):
     def __init__(self):
-        super().__init__()
+        super(Sign, self).__init__()
 
     def forward(self, x):
         return SignFunction.apply(x, self.training)
 
-class CompressionEncoder(nn.module):
+class CompressionEncoder(nn.Module):
 
     def __init__(self):
         super(CompressionEncoder, self).__init__()
@@ -158,19 +160,20 @@ class CompressionEncoder(nn.module):
 
         return x, h1_new, h2_new, h3_new
 
-class CompressionBinarizer(nn.module):
+class CompressionBinarizer(nn.Module):
 
     def __init__(self):
         super(CompressionBinarizer, self).__init__()
         self.conv1 = nn.Conv2d(512, 32, kernel_size=1, stride=1, padding=0, bias=False)
+        self.sign = Sign()
 
     def forward(self,x):
         x = self.conv1(x)
         x = F.sigmoid(x)
-        x = Sign(x)
+        x = self.sign(x)
         return x
 
-class CompressionDecoder(nn.module):
+class CompressionDecoder(nn.Module):
 
     def __init__(self):
         super(CompressionDecoder, self).__init__()
@@ -201,7 +204,7 @@ class CompressionDecoder(nn.module):
             kernel_size=3,
             stride=1,
             padding=1,
-            hidden_kernel_size=1,
+            hidden_kernel_size=3,
             bias=False)
 
         self.lstm4 = ConvLSTM(
@@ -210,7 +213,7 @@ class CompressionDecoder(nn.module):
             kernel_size=3,
             stride=1,
             padding=1,
-            hidden_kernel_size=1,
+            hidden_kernel_size=3,
             bias=False)
 
         self.conv2 = nn.Conv2d(32, 3, kernel_size=1, stride=1, padding=0, bias=False)
