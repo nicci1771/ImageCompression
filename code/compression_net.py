@@ -70,10 +70,7 @@ class ConvLSTM(nn.Module):
 
     def forward(self, input, hidden):
         hx, cx = hidden
-        try:
-            gates = self.conv_ih(input) + self.conv_hh(hx)
-        except:
-            embed()
+        gates = self.conv_ih(input) + self.conv_hh(hx)
 
         ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)
 
@@ -220,24 +217,26 @@ class CompressionDecoder(nn.Module):
 
     def forward(self,x,h1,h2,h3,h4):
         x = self.conv1(x)
+        try:
+            h1_new = self.lstm1(x,h1)
+            x = h1_new[0]
+            x = F.pixel_shuffle(x, 2)
 
-        h1_new = self.lstm1(x,h1)
-        x = h1_new[0]
-        x = F.pixel_shuffle(x, 2)
+            h2_new = self.lstm2(x,h2)
+            x = h2_new[0]
+            x = F.pixel_shuffle(x, 2)
 
-        h2_new = self.lstm2(x,h1)
-        x = h2_new[0]
-        x = F.pixel_shuffle(x, 2)
+            h3_new = self.lstm3(x,h3)
+            x = h3_new[0]
+            x = F.pixel_shuffle(x, 2)
 
-        h3_new = self.lstm1(x,h3)
-        x = h3_new[0]
-        x = F.pixel_shuffle(x, 2)
+            h4_new = self.lstm4(x,h4)
+            x = h4_new[0]
+            x = F.pixel_shuffle(x, 2)
 
-        h4_new = self.lstm1(x,h4)
-        x = h4_new[0]
-        x = F.pixel_shuffle(x, 2)
-
-        x = self.conv2(x)
-        x = F.sigmoid(x)
+            x = self.conv2(x)
+            x = F.sigmoid(x)
+        except:
+            embed()
 
         return x, h1_new, h2_new, h3_new, h4_new
