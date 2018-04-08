@@ -166,7 +166,7 @@ class CompressionBinarizer(nn.Module):
 
     def forward(self,x):
         x = self.conv1(x)
-        x = F.sigmoid(x)
+        x = F.tanh(x)
         x = self.sign(x)
         return x
 
@@ -235,7 +235,7 @@ class CompressionDecoder(nn.Module):
             x = F.pixel_shuffle(x, 2)
 
             x = self.conv2(x)
-            x = F.sigmoid(x)
+            x = F.tanh(x) / 2
         except:
             embed()
 
