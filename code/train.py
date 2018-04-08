@@ -31,6 +31,7 @@ parser.add_argument('--start-epoch', type=int, default=0, help='start epoch')
 parser.add_argument('--epochs', type=int, default=200, help = 'number of epochs')
 parser.add_argument('--print_freq', type=int, default=1, help = 'frequency of printing')
 parser.add_argument('--save_freq', type=int, default=50, help = 'frequency of saaving model')
+parser.add_argument('--rnn-type', type=str, default='LSTM', help = 'LSTM or GRU')
 
 def main():
     global args
@@ -47,9 +48,9 @@ def main():
             num_workers = args.num_workers 
             )
 
-    encoder = compression_net.CompressionEncoder().cuda()
+    encoder = compression_net.CompressionEncoder(rnn_type=args.rnn_type).cuda()
     binarizer = compression_net.CompressionBinarizer().cuda()
-    decoder = compression_net.CompressionDecoder().cuda()
+    decoder = compression_net.CompressionDecoder(rnn_type=args.rnn_type).cuda()
 
     optimizer = optim.Adam([{'params': encoder.parameters()},
                             {'params': binarizer.parameters()},
@@ -95,21 +96,38 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
     for batch, data in enumerate(train_loader):
         begin_time = time.time()
         ## init lstm state
-        encoder_h_1 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
-                       Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()))
-        encoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
+        if args.rnn_type == 'LSTM':
+            encoder_h_1 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
+                        Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()))
+            encoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
                        Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()))
-        encoder_h_3 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
+            encoder_h_3 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
                        Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()))
 
-        decoder_h_1 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
+            decoder_h_1 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
                        Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()))
-        decoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
+            decoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
                        Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()))
-        decoder_h_3 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
+            decoder_h_3 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
                        Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()))
-        decoder_h_4 = (Variable(torch.zeros(data.size(0), 128, 16, 16).cuda()),
+            decoder_h_4 = (Variable(torch.zeros(data.size(0), 128, 16, 16).cuda()),
                        Variable(torch.zeros(data.size(0), 128, 16, 16).cuda()))
+        else:
+            encoder_h_1 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
+                        None)
+            encoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
+                        None)
+            encoder_h_3 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
+                        None)
+
+            decoder_h_1 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
+                       None)
+            decoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
+                       None)
+            decoder_h_3 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
+                       None)
+            decoder_h_4 = (Variable(torch.zeros(data.size(0), 128, 16, 16).cuda()),
+                       None)
 
         input_img = Variable(data.cuda())
         optimizer.zero_grad()

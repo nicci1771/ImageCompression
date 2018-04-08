@@ -8,7 +8,11 @@ from torch.nn.modules.utils import _pair
 from torch.autograd import Function
 from IPython import embed
 
-class ConvLSTM(nn.Module):
+class ConvRNN(nn.Module):
+    def __init__(self):
+        super(ConvRNN, self).__init__()
+
+class ConvLSTM(ConvRNN):
     def __init__(self,
                  input_channels,
                  hidden_channels,
@@ -84,6 +88,89 @@ class ConvLSTM(nn.Module):
 
         return hy, cy
 
+class ConvGRU(ConvRNN):
+    def __init__(self,
+                 input_channels,
+                 hidden_channels,
+                 kernel_size=3,
+                 stride=1,
+                 padding=0,
+                 dilation=1,
+                 hidden_kernel_size=1,
+                 bias=True):
+        super(ConvGRU,self).__init__()
+        self.input_channels = input_channels
+        self.hidden_channels = hidden_channels
+        self.kernel_size = _pair(kernel_size)
+        self.stride = _pair(stride)
+        self.padding = _pair(padding)
+        self.dilation = _pair(dilation)
+        
+        self.hidden_kernel_size = _pair(hidden_kernel_size)
+
+        hidden_padding = _pair(hidden_kernel_size // 2)
+        gate_channels = 2 * self.hidden_channels
+        self.conv_ih = nn.Conv2d(
+            in_channels=self.input_channels,
+            out_channels=gate_channels,
+            kernel_size=self.kernel_size,
+            stride=self.stride,
+            padding=self.padding,
+            dilation=self.dilation,
+            bias=bias)
+        
+        self.conv_hh = nn.Conv2d(
+            in_channels=self.hidden_channels,
+            out_channels=gate_channels,
+            kernel_size=hidden_kernel_size,
+            stride=1,
+            padding=hidden_padding,
+            dilation=1,
+            bias=bias)
+
+        self.conv_ih_new = nn.Conv2d(
+            in_channels=self.input_channels,
+            out_channels=self.hidden_channels,
+            kernel_size=self.kernel_size,
+            stride=self.stride,
+            padding=self.padding,
+            dilation=self.dilation,
+            bias=bias)
+
+        self.conv_hh_new = nn.Conv2d(
+            in_channels=self.hidden_channels,
+            out_channels=self.hidden_channels,
+            kernel_size=hidden_kernel_size,
+            stride=1,
+            padding=hidden_padding,
+            dilation=1,
+            bias=bias)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        self.conv_ih.reset_parameters()
+        self.conv_hh.reset_parameters()
+        self.conv_ih_new.reset_parameters()
+        self.conv_hh_new.reset_parameters()
+
+    def forward(self, input, hidden):
+        #input 16*16, h1 8*8
+        h1, _ = hidden
+
+        gates = self.conv_ih(input) + self.conv_hh(h1)
+        rt, zt = gates.chunk(2, 1)
+
+        reset_gate = F.sigmoid(rt)
+        update_gate = F.sigmoid(zt)
+        gated_hidden = torch.mul(reset_gate, h1)
+
+        gate_new = self.conv_ih_new(input) + self.conv_hh_new(gated_hidden)
+        h_tilde= F.tanh(gate_new)
+
+        next_h = torch.mul(update_gate, h_tilde) + torch.mul(1-update_gate, h1)
+        return next_h, None
+
 class SignFunction(Function):
 
     def __init__(self):
@@ -114,12 +201,18 @@ class Sign(nn.Module):
 
 class CompressionEncoder(nn.Module):
 
-    def __init__(self):
+    def __init__(self, rnn_type='LSTM'):
         super(CompressionEncoder, self).__init__()
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
 
-        self.lstm1 = ConvLSTM(
+        assert rnn_type == 'LSTM' or rnn_type == 'GRU'
+        if rnn_type == 'LSTM':
+            ConvRNN = ConvLSTM
+        else:
+            ConvRNN = ConvGRU
+        
+        self.rnn1 = ConvRNN(
             64,
             256,
             kernel_size=3,
@@ -128,7 +221,7 @@ class CompressionEncoder(nn.Module):
             hidden_kernel_size=1,
             bias=False)
 
-        self.lstm2 = ConvLSTM(
+        self.rnn2 = ConvRNN(
             256,
             512,
             kernel_size=3,
@@ -137,7 +230,7 @@ class CompressionEncoder(nn.Module):
             hidden_kernel_size=1,
             bias=False)
 
-        self.lstm3 = ConvLSTM(
+        self.rnn3 = ConvRNN(
             512,
             512,
             kernel_size=3,
@@ -148,11 +241,11 @@ class CompressionEncoder(nn.Module):
 
     def forward(self, x, h1, h2, h3):
         x = self.conv1(x)
-        h1_new = self.lstm1(x,h1)
+        h1_new = self.rnn1(x,h1)
         x = h1_new[0]
-        h2_new = self.lstm2(x,h2)
+        h2_new = self.rnn2(x,h2)
         x = h2_new[0]
-        h3_new = self.lstm3(x,h3)
+        h3_new = self.rnn3(x,h3)
         x = h3_new[0]
 
         return x, h1_new, h2_new, h3_new
@@ -172,12 +265,18 @@ class CompressionBinarizer(nn.Module):
 
 class CompressionDecoder(nn.Module):
 
-    def __init__(self):
+    def __init__(self, rnn_type='LSTM'):
         super(CompressionDecoder, self).__init__()
 
         self.conv1 = nn.Conv2d(32, 512, kernel_size=1, stride=1, padding=0, bias=False)
 
-        self.lstm1 = ConvLSTM(
+        assert rnn_type == 'LSTM' or rnn_type == 'GRU'
+        if rnn_type == 'LSTM':
+            ConvRNN = ConvLSTM
+        else:
+            ConvRNN = ConvGRU
+        
+        self.rnn1 = ConvRNN(
             512,
             512,
             kernel_size=3,
@@ -186,7 +285,7 @@ class CompressionDecoder(nn.Module):
             hidden_kernel_size=1,
             bias=False)
 
-        self.lstm2 = ConvLSTM(
+        self.rnn2 = ConvRNN(
             128,
             512,
             kernel_size=3,
@@ -195,7 +294,7 @@ class CompressionDecoder(nn.Module):
             hidden_kernel_size=1,
             bias=False)
 
-        self.lstm3 = ConvLSTM(
+        self.rnn3 = ConvRNN(
             128,
             256,
             kernel_size=3,
@@ -204,7 +303,7 @@ class CompressionDecoder(nn.Module):
             hidden_kernel_size=3,
             bias=False)
 
-        self.lstm4 = ConvLSTM(
+        self.rnn4 = ConvRNN(
             64,
             128,
             kernel_size=3,
@@ -217,26 +316,23 @@ class CompressionDecoder(nn.Module):
 
     def forward(self,x,h1,h2,h3,h4):
         x = self.conv1(x)
-        try:
-            h1_new = self.lstm1(x,h1)
-            x = h1_new[0]
-            x = F.pixel_shuffle(x, 2)
+        h1_new = self.rnn1(x,h1)
+        x = h1_new[0]
+        x = F.pixel_shuffle(x, 2)
 
-            h2_new = self.lstm2(x,h2)
-            x = h2_new[0]
-            x = F.pixel_shuffle(x, 2)
+        h2_new = self.rnn2(x,h2)
+        x = h2_new[0]
+        x = F.pixel_shuffle(x, 2)
 
-            h3_new = self.lstm3(x,h3)
-            x = h3_new[0]
-            x = F.pixel_shuffle(x, 2)
+        h3_new = self.rnn3(x,h3)
+        x = h3_new[0]
+        x = F.pixel_shuffle(x, 2)
 
-            h4_new = self.lstm4(x,h4)
-            x = h4_new[0]
-            x = F.pixel_shuffle(x, 2)
+        h4_new = self.rnn4(x,h4)
+        x = h4_new[0]
+        x = F.pixel_shuffle(x, 2)
 
-            x = self.conv2(x)
-            x = F.tanh(x) / 2
-        except:
-            embed()
+        x = self.conv2(x)
+        x = F.sigmoid(x)
 
         return x, h1_new, h2_new, h3_new, h4_new
