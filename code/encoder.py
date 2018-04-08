@@ -6,7 +6,12 @@ from torch.autograd import Variable
 import compression_net
 
 def encoder(input,output,model,iterations,use_cuda=True):
-    image = imread(input, mode='RGB')
+    raw_image = imread(input, mode='RGB')
+    h, w, c = raw_image.shape
+    new_h = (h / 32 +1)* 32
+    new_w = (w / 32 + 1)*32
+    image = np.zeros((new_h, new_w, c), dtype = np.float32)
+    image[:h, :w, :] = raw_image
     image = torch.from_numpy(
         np.expand_dims(
             np.transpose(image.astype(np.float32) / 255.0, (2, 0, 1)), 0))

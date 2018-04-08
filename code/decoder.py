@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 import compression_net
 
-def decoder(input,output,model,iterations,use_cuda=True):
+def decoder(input,output_dir,model,iterations,use_cuda=True):
     content = np.load(input)
     codes = np.unpackbits(content['codes'])
     codes = np.reshape(codes, content['shape']).astype(np.float32) * 2 - 1
@@ -64,6 +64,6 @@ def decoder(input,output,model,iterations,use_cuda=True):
         image = image + output.data.cpu()
 
         imsave(
-            os.path.join(output, '{:02d}.png'.format(iters)),
+            os.path.join(output_dir, '{:02d}.png'.format(iters)),
             np.squeeze(image.numpy().clip(0, 1) * 255.0).astype(np.uint8)
                 .transpose(1, 2, 0))
