@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 import compression_net
 
-def decoder_test(input,output_dir,model,iterations,use_cuda=True):
+def decoder_test(input,output_dir,model,iterations,rnn_type, use_cuda=True):
     content = np.load(input)
     codes = np.unpackbits(content['codes'])
     codes = np.reshape(codes, content['shape']).astype(np.float32) * 2 - 1
@@ -21,7 +21,7 @@ def decoder_test(input,output_dir,model,iterations,use_cuda=True):
 
     codes = Variable(codes, volatile=True)
 
-    decoder = compression_net.CompressionDecoder()
+    decoder = compression_net.CompressionDecoder(rnn_type)
     decoder.eval()
 
     decoder.load_state_dict(torch.load(model))

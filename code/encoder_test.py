@@ -5,7 +5,7 @@ from torch.autograd import Variable
 
 import compression_net
 
-def encoder_test(input,output,model,iterations,use_cuda=True):
+def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
     raw_image = imread(input, mode='RGB')
     h, w, c = raw_image.shape
     new_h = (h // 32 +1)* 32
@@ -20,9 +20,9 @@ def encoder_test(input,output,model,iterations,use_cuda=True):
 
     image = Variable(image, volatile=True)
 
-    encoder = compression_net.CompressionEncoder()
+    encoder = compression_net.CompressionEncoder(rnn_type = rnn_type)
     binarizer = compression_net.CompressionBinarizer()
-    decoder = compression_net.CompressionDecoder()
+    decoder = compression_net.CompressionDecoder(rnn_type = rnn_type)
 
     encoder.eval()
     binarizer.eval()
@@ -108,5 +108,5 @@ def encoder_test(input,output,model,iterations,use_cuda=True):
     codes = (np.stack(codes).astype(np.int8) + 1) // 2
 
     export = np.packbits(codes.reshape(-1))
-
-    np.savez_compressed(output, shape=codes.shape, codes=export)
+    embed()
+    np.savez_compressed(output_path, shape=codes.shape, codes=export)

@@ -44,7 +44,7 @@ def main():
             filename_new = filename.replace(' ','_')
             print('encoding ' + filename)
             encoder_test(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), 
-                    encoder_model, args.encoderiterations, args.cuda)
+                    encoder_model, args.encoderiterations, args.rnn_type, args.cuda)
             output_path_dir = args.OutputImage+filename_new
             output_path_dir = output_path_dir[:-4]+'/'
             if not os.path.exists(output_path_dir):
@@ -52,7 +52,7 @@ def main():
             
             decoder_test(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
-                    decoder_model, args.decoderiterations, args.cuda)
+                    decoder_model, args.decoderiterations, args.rnn_type, args.cuda)
             for i in range(args.decoderiterations):
                 decoded_img_path = output_path_dir + '{:02d}.png'.format(i)
                 ssim_score = msssim(args.input+filename, decoded_img_path)
