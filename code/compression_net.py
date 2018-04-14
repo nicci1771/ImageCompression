@@ -333,6 +333,6 @@ class CompressionDecoder(nn.Module):
         x = F.pixel_shuffle(x, 2)
 
         x = self.conv2(x)
-        x = F.sigmoid(x)
+        x = F.tanh(x) / 2
 
         return x, h1_new, h2_new, h3_new, h4_new

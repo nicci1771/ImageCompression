@@ -58,7 +58,7 @@ def main():
                 ssim_score = msssim(args.input+filename, decoded_img_path)
                 psnr_score = psnr(args.input+filename, decoded_img_path)
                 print("ssim: "+str(ssim_score)+" , psnr: "+str(psnr_score))
-            embed()
+            #embed()
 
 if __name__ == '__main__':
     main()

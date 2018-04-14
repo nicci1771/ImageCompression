@@ -108,5 +108,4 @@ def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
     codes = (np.stack(codes).astype(np.int8) + 1) // 2
 
     export = np.packbits(codes.reshape(-1))
-    embed()
     np.savez_compressed(output_path, shape=codes.shape, codes=export)

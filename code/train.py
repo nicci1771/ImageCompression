@@ -100,18 +100,18 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
         ## init lstm state
         if args.rnn_type == 'LSTM':
             encoder_h_1 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
-                        Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()))
+                    Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()))
             encoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
-                       Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()))
+                   Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()))
             encoder_h_3 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
-                       Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()))
+                   Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()))
 
             decoder_h_1 = (Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()),
-                       Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()))
+                   Variable(torch.zeros(data.size(0), 512, 2, 2).cuda()))
             decoder_h_2 = (Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()),
-                       Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()))
+                   Variable(torch.zeros(data.size(0), 512, 4, 4).cuda()))
             decoder_h_3 = (Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()),
-                       Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()))
+                   Variable(torch.zeros(data.size(0), 256, 8, 8).cuda()))
             decoder_h_4 = (Variable(torch.zeros(data.size(0), 128, 16, 16).cuda()),
                        Variable(torch.zeros(data.size(0), 128, 16, 16).cuda()))
         else:
@@ -136,7 +136,7 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
         losses = []
         
         res = input_img - 0.5
-        ori_res = input_img - 0.5
+        #ori_res = input_img - 0.5
 
         for i in range(args.iterations):   # default is 16
             encoded, encoder_h_1, encoder_h_2, encoder_h_3 = encoder(
@@ -145,8 +145,8 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
             output, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4 = decoder(
                 codes, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
 
-            #res = res - output
-            res = ori_res - output
+            res = res - output
+            #res = ori_res - output
             losses.append(res.abs().mean())
 
         loss = sum(losses) / args.iterations
