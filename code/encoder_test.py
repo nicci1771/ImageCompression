@@ -5,11 +5,11 @@ from torch.autograd import Variable
 
 import compression_net
 
-def encoder(input,output,model,iterations,use_cuda=True):
+def encoder_test(input,output,model,iterations,use_cuda=True):
     raw_image = imread(input, mode='RGB')
     h, w, c = raw_image.shape
-    new_h = (h / 32 +1)* 32
-    new_w = (w / 32 + 1)*32
+    new_h = (h // 32 +1)* 32
+    new_w = (w // 32 + 1)*32
     image = np.zeros((new_h, new_w, c), dtype = np.float32)
     image[:h, :w, :] = raw_image
     image = torch.from_numpy(
@@ -88,19 +88,22 @@ def encoder(input,output,model,iterations,use_cuda=True):
 
     codes = []
     res = image - 0.5
+    ori_res = image - 0.5
+
     for iters in range(iterations):
         encoded, encoder_h_1, encoder_h_2, encoder_h_3 = encoder(
             res, encoder_h_1, encoder_h_2, encoder_h_3)
 
         code = binarizer(encoded)
 
-        # output, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4 = decoder(
-        #     code, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
-        #
+        output, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4 = decoder(
+             code, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
+        
         # res = res - output
+        res = ori_res - output
         codes.append(code.data.cpu().numpy())
 
-        # print('Iter: {:02d}; Loss: {:.06f}'.format(iters, res.data.abs().mean()))
+        print('Iter: {:02d}; Loss: {:.06f}'.format(iters, res.data.abs().mean()))
 
     codes = (np.stack(codes).astype(np.int8) + 1) // 2
 

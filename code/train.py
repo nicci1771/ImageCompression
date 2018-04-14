@@ -62,11 +62,11 @@ def main():
         if os.path.isdir('checkpoint'):
             print("=> loading checkpoint '{}'".format(args.resume))
             encoder.load_state_dict(
-                torch.load('checkpoint/encoder_{:08d}.pth'.format(args.resume)))
+                torch.load('checkpoint/{}/encoder_{:08d}.pth'.format(args.rnn_type, args.resume)))
             binarizer.load_state_dict(
-                torch.load('checkpoint/binarizer_{:08d}.pth'.format(args.resume)))
+                torch.load('checkpoint/{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.resume)))
             decoder.load_state_dict(
-                torch.load('checkpoint/decoder_{:08d}.pth'.format(args.resume)))
+                torch.load('checkpoint/{}/decoder_{:08d}.pth'.format(args.rnn_type, args.resume)))
             #args.start_epoch = checkpoint['epoch']
             #model.load_state_dict(checkpoint['state_dict'])
             #optimizer.load_state_dict(checkpoint['optimizer'])
@@ -85,12 +85,14 @@ def main():
         if epoch % args.save_freq == 0 or epoch == args.epochs-1:
             if not os.path.exists('checkpoint'):
                 os.mkdir('checkpoint')
+            if not os.path.exists('checkpoint/{}'.format(args.rnn_type)):
+                os.mkdir('checkpoint/{}'.format(args.rnn_type))
             torch.save(encoder.state_dict(), 
-                    'checkpoint/encoder_{:08d}.pth'.format(epoch))
+                    'checkpoint/{}/encoder_{:08d}.pth'.format(args.rnn_type, epoch))
             torch.save(binarizer.state_dict(),
-               'checkpoint/binarizer_{:08d}.pth'.format(epoch))
+               'checkpoint/{}/binarizer_{:08d}.pth'.format(args.rnn_type, epoch))
             torch.save(decoder.state_dict(), 
-                    'checkpoint/decoder_{:08d}.pth'.format(epoch))
+                    'checkpoint/{}/decoder_{:08d}.pth'.format(args.rnn_type, epoch))
 
 def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logger):
     for batch, data in enumerate(train_loader):
@@ -132,7 +134,9 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
         input_img = Variable(data.cuda())
         optimizer.zero_grad()
         losses = []
+        
         res = input_img - 0.5
+        ori_res = input_img - 0.5
 
         for i in range(args.iterations):   # default is 16
             encoded, encoder_h_1, encoder_h_2, encoder_h_3 = encoder(
@@ -141,7 +145,8 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
             output, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4 = decoder(
                 codes, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
 
-            res = res - output
+            #res = res - output
+            res = ori_res - output
             losses.append(res.abs().mean())
 
         loss = sum(losses) / args.iterations
