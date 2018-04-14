@@ -99,8 +99,8 @@ def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
         output, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4 = decoder(
              code, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
         
-        # res = res - output
-        res = ori_res - output
+        res = res - output
+        #res = ori_res - output
         codes.append(code.data.cpu().numpy())
 
         print('Iter: {:02d}; Loss: {:.06f}'.format(iters, res.data.abs().mean()))
