@@ -136,7 +136,6 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
         losses = []
         
         res = input_img - 0.5
-        #ori_res = input_img - 0.5
 
         for i in range(args.iterations):   # default is 16
             encoded, encoder_h_1, encoder_h_2, encoder_h_3 = encoder(
@@ -146,7 +145,6 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
                 codes, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
 
             res = res - output
-            #res = ori_res - output
             losses.append(res.abs().mean())
 
         loss = sum(losses) / args.iterations

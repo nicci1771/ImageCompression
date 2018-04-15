@@ -9,7 +9,7 @@ from IPython import embed
 
 RESHAPE_W = 32
 RESHAPE_H = 32
-def encoder_test(input, output_path, model, iterations, rnn_type, use_cuda = True):
+def encoder_test_batch(input, output_path, model, iterations, rnn_type, use_cuda = True):
     raw_image = imread(input, mode='RGB')
     h, w, c = raw_image.shape
     new_h = (h // 32 +1)* 32
@@ -21,12 +21,11 @@ def encoder_test(input, output_path, model, iterations, rnn_type, use_cuda = Tru
     #RESHAPE_W = new_w
     h_num = new_h // RESHAPE_H
     w_num = new_w // RESHAPE_W
-    image = image.reshape(RESHAPE_H, h_num, RESHAPE_W, w_num, c)
-    image = np.transpose(image, (1, 3, 0, 2, 4))  # h*w*32*32*3
+    image = image.reshape(h_num, RESHAPE_H, w_num, RESHAPE_W, c)
+    image = np.transpose(image, (0, 2, 1, 3, 4)) # h*w*32*32*3
     final_code = []
     for i in range(h_num):
-        img_ = image[i, :, :, :, :].squeeze()
-        #img_ = np.expand_dims(img_, axis=0)
+        img_ = image[i, :, :, :, :]  # w*32*32*3
         img_ = np.transpose(img_, (0, 3, 1, 2))
         img_ = torch.from_numpy(img_.astype(np.float32) / 255.0)
         batch_size, input_channels, height, width = img_.size()
@@ -39,7 +38,6 @@ def encoder_test(input, output_path, model, iterations, rnn_type, use_cuda = Tru
     d1, d2, d3, d4, d5, d6 = final_code.shape
     final_code = final_code.reshape(d1, d2, d3*d4, d5*d6)
     final_code = np.expand_dims(final_code, 1)
-    #final_code = np.transpose(final_code, )
     export = np.packbits(final_code.reshape(-1))
     np.savez_compressed(output_path, shape=final_code.shape, codes=export)
 
