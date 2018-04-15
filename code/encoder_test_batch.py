@@ -5,18 +5,47 @@ from torch.autograd import Variable
 
 import compression_net
 import time
+from IPython import embed
 
-def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
+RESHAPE_W = 32
+RESHAPE_H = 32
+def encoder_test(input, output_path, model, iterations, rnn_type, use_cuda = True):
     raw_image = imread(input, mode='RGB')
     h, w, c = raw_image.shape
     new_h = (h // 32 +1)* 32
     new_w = (w // 32 + 1)*32
     image = np.zeros((new_h, new_w, c), dtype = np.float32)
     image[:h, :w, :] = raw_image
-    image = torch.from_numpy(
-        np.expand_dims(
-            np.transpose(image.astype(np.float32) / 255.0, (2, 0, 1)), 0))
-    batch_size, input_channels, height, width = image.size()
+    input_channels, height, width = image.shape
+    #RESHAPE_H = new_h
+    #RESHAPE_W = new_w
+    h_num = new_h // RESHAPE_H
+    w_num = new_w // RESHAPE_W
+    image = image.reshape(RESHAPE_H, h_num, RESHAPE_W, w_num, c)
+    image = np.transpose(image, (1, 3, 0, 2, 4))  # h*w*32*32*3
+    final_code = []
+    for i in range(h_num):
+        img_ = image[i, :, :, :, :].squeeze()
+        #img_ = np.expand_dims(img_, axis=0)
+        img_ = np.transpose(img_, (0, 3, 1, 2))
+        img_ = torch.from_numpy(img_.astype(np.float32) / 255.0)
+        batch_size, input_channels, height, width = img_.size()
+        code = encoder_test_each(img_, model, iterations, rnn_type, use_cuda)
+        final_code.append(code)
+        #final_code = torch.cat((final_code, code), 1)
+    final_code = np.stack(final_code)
+    # shape should be h_num*iteration*w_num*32*2*2
+    final_code = np.transpose(final_code, (1, 3, 0, 4, 2, 5))
+    d1, d2, d3, d4, d5, d6 = final_code.shape
+    final_code = final_code.reshape(d1, d2, d3*d4, d5*d6)
+    final_code = np.expand_dims(final_code, 1)
+    #final_code = np.transpose(final_code, )
+    export = np.packbits(final_code.reshape(-1))
+    np.savez_compressed(output_path, shape=final_code.shape, codes=export)
+
+   
+def encoder_test_each(image,model,iterations,rnn_type, use_cuda=True):
+    batch_size, channel, height, width = image.shape
     assert height % 32 == 0 and width % 32 == 0
 
     image = Variable(image, volatile=True)
@@ -105,8 +134,7 @@ def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
         codes.append(code.data.cpu().numpy())
 
         print('Iter: {:02d}; Loss: {:.06f}'.format(iters, res.data.abs().mean()))
-
     codes = (np.stack(codes).astype(np.int8) + 1) // 2
-
-    export = np.packbits(codes.reshape(-1))
-    np.savez_compressed(output_path, shape=codes.shape, codes=export)
+    #export = np.packbits(codes.reshape(-1))
+    #np.savez_compressed(output_path, shape=codes.shape, codes=export)
+    return codes

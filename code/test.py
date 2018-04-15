@@ -4,6 +4,7 @@ import numpy as np
 from scipy.misc import imread, imresize, imsave
 from encoder_test import *
 from decoder_test import *
+from encoder_test_batch import *
 from metric import *
 
 import torch
@@ -12,8 +13,8 @@ from tqdm import tqdm
 from IPython import embed
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--encodermodel', type=int, default = 199,  help='path to model')
-parser.add_argument('--decodermodel', type=int, default = 199, help='path to model')
+parser.add_argument('--encodermodel', type=int, default = 150,  help='path to model')
+parser.add_argument('--decodermodel', type=int, default = 150, help='path to model')
 parser.add_argument('--input', '-i', type=str, 
         default = '../data/valid/', help='input dir')
 parser.add_argument('--OutputCode', type=str, 
@@ -21,8 +22,8 @@ parser.add_argument('--OutputCode', type=str,
 parser.add_argument('--OutputImage', type=str, 
         default = 'result/decode_image/', help='output image dir')
 parser.add_argument('--cuda', '-g', action='store_true', help='enables cuda')
-parser.add_argument('--encoderiterations', type=int, default=16, help='unroll iterations')
-parser.add_argument('--decoderiterations', type=int, default=16, help='unroll iterations')
+parser.add_argument('--encoderiterations', type=int, default=2, help='unroll iterations')
+parser.add_argument('--decoderiterations', type=int, default=2, help='unroll iterations')
 parser.add_argument('--rnn-type', type=str, default='LSTM', help='LSTM or GRU')
 
 def is_image_file(filename):
