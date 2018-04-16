@@ -34,6 +34,7 @@ def decoder_test_batch(input,output_dir,model,iterations,rnn_type, use_cuda=True
         imsave(
         os.path.join(output_dir, '{:02d}.png'.format(iters)),
         (final_image[iters].clip(0, 1) * 255.0).astype(np.uint8))
+    return min(iterations, codes.size(0))
     
 def decoder_test_each(codes, output_dir, model, rnn_type, use_cuda, iterations):
     iters, batch_size, channels, height, width = codes.size()

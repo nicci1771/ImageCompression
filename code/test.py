@@ -14,10 +14,10 @@ from tqdm import tqdm
 from IPython import embed
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--encodermodel', type=int, default = 150,  help='path to model')
-parser.add_argument('--decodermodel', type=int, default = 150, help='path to model')
+parser.add_argument('--encodermodel', type=int, default = 199,  help='path to model')
+parser.add_argument('--decodermodel', type=int, default = 199, help='path to model')
 parser.add_argument('--input', '-i', type=str, 
-        default = '../data/valid/', help='input dir')
+        default = '../data/test/', help='input dir')
 parser.add_argument('--OutputCode', type=str, 
         default = 'result/codes/', help='output codes dir')
 parser.add_argument('--OutputImage', type=str, 
@@ -41,8 +41,13 @@ def main():
     
     encoder_model = 'checkpoint/{}/encoder_{:08d}.pth'.format(args.rnn_type, args.encodermodel)
     decoder_model = 'checkpoint/{}/decoder_{:08d}.pth'.format(args.rnn_type, args.decodermodel)
-
+    #cnt = 0
     for filename in tqdm(os.listdir(args.input)):
+        """
+        if cnt < 11:
+            cnt = cnt + 1
+            continue
+        """
         if is_image_file(filename):
             
             start_time = time.time()
@@ -60,14 +65,14 @@ def main():
                 os.makedirs(output_path_dir)
             
             if args.bybatch:
-                decoder_test_batch(args.OutputCode+filename_new.replace('png','npz'), 
+                iter_num = decoder_test_batch(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
                     decoder_model, args.decoderiterations, args.rnn_type, args.cuda)
             else:
-                decoder_test(args.OutputCode+filename_new.replace('png','npz'), 
+                iter_num = decoder_test(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
                     decoder_model, args.decoderiterations, args.rnn_type, args.cuda)
-            for i in range(args.decoderiterations):
+            for i in range(min(iter_num, args.decoderiterations)):
                 decoded_img_path = output_path_dir + '{:02d}.png'.format(i)
                 ssim_score = msssim(args.input+filename, decoded_img_path)
                 psnr_score = psnr(args.input+filename, decoded_img_path)

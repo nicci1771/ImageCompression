@@ -67,3 +67,4 @@ def decoder_test(input,output_dir,model,iterations,rnn_type, use_cuda=True):
             os.path.join(output_dir, '{:02d}.png'.format(iters)),
             np.squeeze(image.numpy().clip(0, 1) * 255.0).astype(np.uint8)
                 .transpose(1, 2, 0))
+    return min(iterations, codes.size(0))
