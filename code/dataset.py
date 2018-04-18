@@ -28,21 +28,25 @@ def default_loader(path):
 class ImageFolder(data.Dataset):
     """ ImageFolder can be used to load images where there are no labels."""
 
-    def __init__(self, root, transform=None, loader=default_loader):
+    def __init__(self, roots, transform=None, loader=default_loader):
         images = []
-        for filename in os.listdir(root):
-            if is_image_file(filename):
-                images.append('{}'.format(filename))
-
-        self.root = root
+        r_ids = []
+        for r_id, root in enumerate(roots):
+            for filename in os.listdir(root):
+                if is_image_file(filename):
+                    images.append('{}'.format(filename))
+                    r_ids.append(r_id)
+        self.roots = roots
+        self.r_ids = r_ids
         self.imgs = images
         self.transform = transform
         self.loader = loader
 
     def __getitem__(self, index):
         filename = self.imgs[index]
+        root = self.roots[self.r_ids[index]]
         try:
-            img = self.loader(os.path.join(self.root, filename))
+            img = self.loader(os.path.join(root, filename))
         except:
             return torch.zeros((3, 32, 32))
 

@@ -19,7 +19,10 @@ from IPython import embed
 
 parser = argparse.ArgumentParser(description = 'Image Compression')
 parser.add_argument('--batch-size', '-N', type=int, default=32, help='batch size')
-parser.add_argument('--train-path', '-f', required=True, type=str, help='folder of training images')
+#parser.add_argument('--train-paths', '-f', required=True, type=str, help='folder of training images')
+
+parser.add_argument('--train-paths', '-f', nargs='+', required=True)
+
 parser.add_argument('--max-epochs', '-e', type=int, default=200, help='max epochs')
 parser.add_argument('--lr', type=float, default=0.0005, help='learning rate')
 # parser.add_argument('--cuda', '-g', action='store_true', help='enables cuda')
@@ -41,7 +44,7 @@ def main():
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor()])
     
-    train_dataset = dataset.ImageFolder(root = args.train_path, transform = train_transform)
+    train_dataset = dataset.ImageFolder(roots = args.train_paths, transform = train_transform)
     train_loader = data.DataLoader(dataset = train_dataset,\
             batch_size = args.batch_size,\
             shuffle = True,\
