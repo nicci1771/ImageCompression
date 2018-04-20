@@ -26,6 +26,7 @@ parser.add_argument('--cuda', '-g', action='store_true', help='enables cuda')
 parser.add_argument('--encoderiterations', type=int, default=16, help='unroll iterations')
 parser.add_argument('--decoderiterations', type=int, default=16, help='unroll iterations')
 parser.add_argument('--rnn-type', type=str, default='LSTM', help='LSTM or GRU')
+parser.add_argument('--loss-type', type=str, default='L1', help='L1, L2 or SSIM')
 parser.add_argument('--bybatch', default=False, action='store_true')
 
 def is_image_file(filename):
@@ -39,8 +40,8 @@ def main():
     if not os.path.exists(args.OutputImage):
         os.makedirs(args.OutputImage)
     
-    encoder_model = 'checkpoint/{}/encoder_{:08d}.pth'.format(args.rnn_type, args.encodermodel)
-    decoder_model = 'checkpoint/{}/decoder_{:08d}.pth'.format(args.rnn_type, args.decodermodel)
+    encoder_model = 'checkpoint/{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.encodermodel)
+    decoder_model = 'checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.decodermodel)
     #cnt = 0
     for filename in tqdm(os.listdir(args.input)):
         """
