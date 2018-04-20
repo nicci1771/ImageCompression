@@ -16,6 +16,7 @@ import os
 from logger import Logger
 import time
 from IPython import embed
+import pytorch_ssim
 
 parser = argparse.ArgumentParser(description = 'Image Compression')
 parser.add_argument('--batch-size', '-N', type=int, default=32, help='batch size')
@@ -35,6 +36,7 @@ parser.add_argument('--epochs', type=int, default=200, help = 'number of epochs'
 parser.add_argument('--print_freq', type=int, default=1, help = 'frequency of printing')
 parser.add_argument('--save_freq', type=int, default=50, help = 'frequency of saaving model')
 parser.add_argument('--rnn-type', type=str, default='LSTM', help = 'LSTM or GRU')
+parser.add_argument('--loss-type', type=str, default='L1', help = 'L1, L2 or SSIM')
 
 def main():
     global args
@@ -65,11 +67,11 @@ def main():
         if os.path.isdir('checkpoint'):
             print("=> loading checkpoint '{}'".format(args.resume))
             encoder.load_state_dict(
-                torch.load('checkpoint/{}/encoder_{:08d}.pth'.format(args.rnn_type, args.resume)))
+                torch.load('checkpoint/{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
             binarizer.load_state_dict(
-                torch.load('checkpoint/{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.resume)))
+                torch.load('checkpoint/{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
             decoder.load_state_dict(
-                torch.load('checkpoint/{}/decoder_{:08d}.pth'.format(args.rnn_type, args.resume)))
+                torch.load('checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
             #args.start_epoch = checkpoint['epoch']
             #model.load_state_dict(checkpoint['state_dict'])
             #optimizer.load_state_dict(checkpoint['optimizer'])
@@ -88,14 +90,14 @@ def main():
         if epoch % args.save_freq == 0 or epoch == args.epochs-1:
             if not os.path.exists('checkpoint'):
                 os.mkdir('checkpoint')
-            if not os.path.exists('checkpoint/{}'.format(args.rnn_type)):
-                os.mkdir('checkpoint/{}'.format(args.rnn_type))
+            if not os.path.exists('checkpoint/{}_{}'.format(args.rnn_type, args.loss_type)):
+                os.mkdir('checkpoint/{}_{}'.format(args.rnn_type, args.loss_type))
             torch.save(encoder.state_dict(), 
-                    'checkpoint/{}/encoder_{:08d}.pth'.format(args.rnn_type, epoch))
+                    'checkpoint/{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, epoch))
             torch.save(binarizer.state_dict(),
-               'checkpoint/{}/binarizer_{:08d}.pth'.format(args.rnn_type, epoch))
+               'checkpoint/{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, epoch))
             torch.save(decoder.state_dict(), 
-                    'checkpoint/{}/decoder_{:08d}.pth'.format(args.rnn_type, epoch))
+                    'checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, epoch))
 
 def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logger):
     for batch, data in enumerate(train_loader):
@@ -139,7 +141,7 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
         losses = []
         
         res = input_img - 0.5
-
+        image = 0.5
         for i in range(args.iterations):   # default is 16
             encoded, encoder_h_1, encoder_h_2, encoder_h_3 = encoder(
                 res, encoder_h_1, encoder_h_2, encoder_h_3)
@@ -148,7 +150,16 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
                 codes, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
 
             res = res - output
-            losses.append(res.abs().mean())
+            image = image + output
+            
+            if args.loss_type == 'L1':
+                losses.append(res.abs().mean())
+            elif args.loss_type == 'L2':
+                losses.append((res*res).mean())
+            elif args.loss_type == 'SSIM':
+                ssim_value = pytorch_ssim.ssim(input_img, image, size_average = False)
+                difference = 1 - ssim_value
+                losses.append((res.abs() * difference[:, None, None, None]).mean())
 
         loss = sum(losses) / args.iterations
         loss.backward()
