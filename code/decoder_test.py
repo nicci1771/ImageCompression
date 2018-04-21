@@ -28,7 +28,11 @@ def decoder_test(input,output_dir,model,iterations,rnn_type, use_cuda=True, netw
         decoder = compression_net_smaller.CompressionDecoder(rnn_type)
     decoder.eval()
 
-    decoder.load_state_dict(torch.load(model))
+    if use_cuda:
+        decoder.load_state_dict(torch.load(model))
+    else:
+        decoder.load_state_dict(torch.load(model, map_location=lambda storage, loc: storage))
+
 
     decoder_h_0 = (Variable(
         torch.zeros(batch_size, 512, height // 32, width // 32), volatile=True),
