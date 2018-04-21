@@ -34,10 +34,17 @@ def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True, net
     binarizer.eval()
     decoder.eval()
 
-    encoder.load_state_dict(torch.load(model))
-    binarizer.load_state_dict(
-        torch.load(model.replace('encoder', 'binarizer')))
-    decoder.load_state_dict(torch.load(model.replace('encoder', 'decoder')))
+    if use_cuda:
+        encoder.load_state_dict(torch.load(model))
+        binarizer.load_state_dict(
+            torch.load(model.replace('encoder', 'binarizer')))
+        decoder.load_state_dict(torch.load(model.replace('encoder', 'decoder')))
+    else:
+        encoder.load_state_dict(torch.load(model, map_location=lambda storage, loc: storage))
+        binarizer.load_state_dict(
+                torch.load(model.replace('encoder', 'binarizer'), map_location=lambda storage, loc:storage))
+        decoder.load_state_dict(torch.load(model.replace('encoder', 'decoder'), map_location=lambda storage, loc:storage))
+
 
     encoder_h_1 = (Variable(
         torch.zeros(batch_size, 256, height // 4, width // 4), volatile=True),
