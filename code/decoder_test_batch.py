@@ -8,8 +8,9 @@ import torch
 from torch.autograd import Variable
 
 import compression_net
+import compression_net_smaller
 
-def decoder_test_batch(input,output_dir,model,iterations,rnn_type, use_cuda=True):
+def decoder_test_batch(input,output_dir,model,iterations,rnn_type, use_cuda=True, network='Big'):
     content = np.load(input)
     codes = np.unpackbits(content['codes'])
     codes = np.reshape(codes, content['shape']).astype(np.float32) * 2 - 1
@@ -24,7 +25,7 @@ def decoder_test_batch(input,output_dir,model,iterations,rnn_type, use_cuda=True
     final_image = []
     for i in range(h_num):
         print('Deocding line {}'.format(i))
-        images = decoder_test_each(codes[i], output_dir, model, rnn_type, use_cuda, iterations)
+        images = decoder_test_each(codes[i], output_dir, model, rnn_type, use_cuda, iterations, network)
         final_image.append(images)
     final_image = np.array(final_image)
     final_image = np.transpose(final_image, (1, 0, 4, 2, 5, 3))
@@ -36,15 +37,18 @@ def decoder_test_batch(input,output_dir,model,iterations,rnn_type, use_cuda=True
         (final_image[iters].clip(0, 1) * 255.0).astype(np.uint8))
     return min(iterations, codes.size(0))
     
-def decoder_test_each(codes, output_dir, model, rnn_type, use_cuda, iterations):
+def decoder_test_each(codes, output_dir, model, rnn_type, use_cuda, iterations, network):
     iters, batch_size, channels, height, width = codes.size()
     
     height = height * 16
     width = width * 16
 
     codes = Variable(codes, volatile=True)
-
-    decoder = compression_net.CompressionDecoder(rnn_type)
+    
+    if network == 'Big':
+        decoder = compression_net.CompressionDecoder(rnn_type)
+    else:
+        decoder = compression_net_smaller.CompressionDecoder(rnn_type)
     decoder.eval()
 
     decoder.load_state_dict(torch.load(model))
