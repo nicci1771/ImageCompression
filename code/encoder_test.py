@@ -7,7 +7,7 @@ import compression_net
 import compression_net_smaller
 import time
 
-def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True, network='Big'):
+def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True, network='Big', code_size=32):
     raw_image = imread(input, mode='RGB')
     h, w, c = raw_image.shape
     new_h = (h // 32 +1)* 32
@@ -23,8 +23,8 @@ def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True, net
     image = Variable(image, volatile=True)
     if network == 'Big':
         encoder = compression_net.CompressionEncoder(rnn_type = rnn_type)
-        binarizer = compression_net.CompressionBinarizer()
-        decoder = compression_net.CompressionDecoder(rnn_type = rnn_type)
+        binarizer = compression_net.CompressionBinarizer(code_size=code_size)
+        decoder = compression_net.CompressionDecoder(rnn_type = rnn_type, code_size=code_size)
     else:
         encoder = compression_net_smaller.CompressionEncoder(rnn_type = rnn_type)
         binarizer = compression_net_smaller.CompressionBinarizer()

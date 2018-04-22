@@ -36,6 +36,7 @@ parser.add_argument('--print_freq', type=int, default=1, help = 'frequency of pr
 parser.add_argument('--save_freq', type=int, default=50, help = 'frequency of saaving model')
 parser.add_argument('--rnn-type', type=str, default='LSTM', help = 'LSTM or GRU')
 parser.add_argument('--loss-type', type=str, default='L1', help = 'L1, L2 or SSIM')
+parser.add_argument('--code-size', type=int, default=32)
 
 def main():
     global args
@@ -53,8 +54,8 @@ def main():
             )
 
     encoder = compression_net.CompressionEncoder(rnn_type=args.rnn_type).cuda()
-    binarizer = compression_net.CompressionBinarizer().cuda()
-    decoder = compression_net.CompressionDecoder(rnn_type=args.rnn_type).cuda()
+    binarizer = compression_net.CompressionBinarizer(code_size=args.code_size).cuda()
+    decoder = compression_net.CompressionDecoder(rnn_type=args.rnn_type, code_size=args.code_size).cuda()
 
     optimizer = optim.Adam([{'params': encoder.parameters()},
                             {'params': binarizer.parameters()},
@@ -88,14 +89,14 @@ def main():
         if epoch % args.save_freq == 0 or epoch == args.epochs-1:
             if not os.path.exists('checkpoint'):
                 os.mkdir('checkpoint')
-            if not os.path.exists('checkpoint/{}_{}'.format(args.rnn_type, args.loss_type)):
-                os.mkdir('checkpoint/{}_{}'.format(args.rnn_type, args.loss_type))
+            if not os.path.exists('checkpoint/{}_{}_{}'.format(args.rnn_type, args.loss_type, args.code_size)):
+                os.mkdir('checkpoint/{}_{}_{}'.format(args.rnn_type, args.loss_type, args.code_size))
             torch.save(encoder.state_dict(), 
-                    'checkpoint/{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, epoch))
+                    'checkpoint/{}_{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, epoch))
             torch.save(binarizer.state_dict(),
-               'checkpoint/{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, epoch))
+               'checkpoint/{}_{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, epoch))
             torch.save(decoder.state_dict(), 
-                    'checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, epoch))
+                    'checkpoint/{}_{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, epoch))
 
 def train(train_loader, encoder, binarizer, decoder, epoch, optimizer):
     for batch, data in enumerate(train_loader):
