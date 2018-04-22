@@ -26,12 +26,12 @@ def main():
     for filename in tqdm(os.listdir(args.input)):
         if is_image_file(filename):
             filename_new = filename.replace(' ','_')
-            output_path_dir = args.OutputImage+filename_new
+            output_path_dir = args.OutputImage
             output_path_dir = output_path_dir[:-4]+'/'
             if not os.path.exists(output_path_dir):
                 os.makedirs(output_path_dir)
             
-            jpeg_img_path = output_path_dir + filename_new.split('.')[0] + '.jpeg'
+            jpeg_img_path = output_path_dir + filename_new.split('.')[0] + '.jpg'
             img = cv2.imread(args.input+filename)
             cv2.imwrite(jpeg_img_path, img)
             ssim_score = msssim(args.input+filename, jpeg_img_path)
