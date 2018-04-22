@@ -27,6 +27,7 @@ parser.add_argument('--encoderiterations', type=int, default=8, help='unroll ite
 parser.add_argument('--decoderiterations', type=int, default=8, help='unroll iterations')
 parser.add_argument('--rnn-type', type=str, default='LSTM', help='LSTM or GRU')
 parser.add_argument('--loss-type', type=str, default='L1', help='L1, L2 or SSIM')
+parser.add_argument('--code-size', type=int, default=32)
 parser.add_argument('--bybatch', default=False, action='store_true')
 parser.add_argument('--network', type=str, default='Big', help='big or small')
 
@@ -41,8 +42,8 @@ def main():
     if not os.path.exists(args.OutputImage):
         os.makedirs(args.OutputImage)
     
-    encoder_model = 'checkpoint/{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.encodermodel)
-    decoder_model = 'checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.decodermodel)
+    encoder_model = 'checkpoint/{}_{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type,args.code_size, args.encodermodel)
+    decoder_model = 'checkpoint/{}_{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.decodermodel)
     #cnt = 0
     for filename in tqdm(os.listdir(args.input)):
         """
@@ -58,7 +59,7 @@ def main():
             if args.bybatch:
                 encoder_test_batch(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network)
             else:
-                encoder_test(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network)
+                encoder_test(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
             encoded_time = time.time()
             #print('encode time is {}'.format(encoded_time - start_time))
             output_path_dir = args.OutputImage+filename_new
@@ -73,7 +74,7 @@ def main():
             else:
                 iter_num = decoder_test(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
-                    decoder_model, args.decoderiterations, args.rnn_type, args.cuda, args.network)
+                    decoder_model, args.decoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
             for i in range(min(iter_num, args.decoderiterations)):
                 decoded_img_path = output_path_dir + '{:02d}.png'.format(i)
                 ssim_score = msssim(args.input+filename, decoded_img_path)

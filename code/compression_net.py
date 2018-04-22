@@ -252,9 +252,9 @@ class CompressionEncoder(nn.Module):
 
 class CompressionBinarizer(nn.Module):
 
-    def __init__(self):
+    def __init__(self, code_size):
         super(CompressionBinarizer, self).__init__()
-        self.conv1 = nn.Conv2d(512, 32, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv1 = nn.Conv2d(512, code_size, kernel_size=1, stride=1, padding=0, bias=False)
         self.sign = Sign()
 
     def forward(self,x):
@@ -265,10 +265,10 @@ class CompressionBinarizer(nn.Module):
 
 class CompressionDecoder(nn.Module):
 
-    def __init__(self, rnn_type='LSTM'):
+    def __init__(self, rnn_type='LSTM', code_size=32):
         super(CompressionDecoder, self).__init__()
 
-        self.conv1 = nn.Conv2d(32, 512, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv1 = nn.Conv2d(code_size, 512, kernel_size=1, stride=1, padding=0, bias=False)
 
         assert rnn_type == 'LSTM' or rnn_type == 'GRU'
         if rnn_type == 'LSTM':

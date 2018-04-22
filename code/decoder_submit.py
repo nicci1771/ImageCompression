@@ -30,11 +30,6 @@ def decoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
         decoder.load_state_dict(torch.load(model, map_location=lambda storage, loc: storage))
 
 
-    decoder_h_0 = (Variable(
-        torch.zeros(batch_size, 512, height // 32, width // 32), volatile=True),
-                   Variable(
-                       torch.zeros(batch_size, 512, height // 32, width // 32),
-                       volatile=True))
     decoder_h_1 = (Variable(
         torch.zeros(batch_size, 512, height // 16, width // 16), volatile=True),
                    Variable(
