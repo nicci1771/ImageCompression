@@ -67,11 +67,11 @@ def main():
         if os.path.isdir('checkpoint'):
             print("=> loading checkpoint '{}'".format(args.resume))
             encoder.load_state_dict(
-                torch.load('checkpoint/{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
+                torch.load('checkpoint/{}_{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.resume)))
             binarizer.load_state_dict(
-                torch.load('checkpoint/{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
+                torch.load('checkpoint/{}_{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.resume)))
             decoder.load_state_dict(
-                torch.load('checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
+                torch.load('checkpoint/{}_{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.resume)))
             #args.start_epoch = checkpoint['epoch']
             #model.load_state_dict(checkpoint['state_dict'])
             #optimizer.load_state_dict(checkpoint['optimizer'])
