@@ -13,7 +13,6 @@ import dataset
 import compression_net
 import argparse
 import os
-from logger import Logger
 import time
 from IPython import embed
 import pytorch_ssim
@@ -81,12 +80,11 @@ def main():
             print("=> no checkpoint found at '{}'".format(args.resume))
     
     torch.manual_seed(23)
-    data_logger = Logger('./logs/', name = 'compression_net')
     scheduler = LS.MultiStepLR(optimizer, milestones=[3, 10, 20, 50, 100], gamma=0.5)
 
     for epoch in range(args.start_epoch, args.start_epoch+args.epochs):
         scheduler.step()
-        train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logger)
+        train(train_loader, encoder, binarizer, decoder, epoch, optimizer)
         if epoch % args.save_freq == 0 or epoch == args.epochs-1:
             if not os.path.exists('checkpoint'):
                 os.mkdir('checkpoint')
@@ -99,7 +97,7 @@ def main():
             torch.save(decoder.state_dict(), 
                     'checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, epoch))
 
-def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logger):
+def train(train_loader, encoder, binarizer, decoder, epoch, optimizer):
     for batch, data in enumerate(train_loader):
         begin_time = time.time()
         ## init lstm state
@@ -173,7 +171,6 @@ def train(train_loader, encoder, binarizer, decoder, epoch, optimizer, data_logg
                 format(epoch, batch, len(train_loader), loss.data[0], end_time - begin_time))
         
         index = epoch * len(train_loader) + batch
-        data_logger.scalar_summary(tag='train/loss', value=loss, step = index)
 
 if __name__ == '__main__':
     main()
