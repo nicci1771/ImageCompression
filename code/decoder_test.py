@@ -14,6 +14,9 @@ def decoder_test(input,output_dir,model,iterations,rnn_type, use_cuda=True, netw
     content = np.load(input)
     codes = np.unpackbits(content['codes'])
     codes = np.reshape(codes, content['shape']).astype(np.float32) * 2 - 1
+    delta = content['delta']
+    delta_h = int(delta[0])
+    delta_w = int(delta[1])
 
     codes = torch.from_numpy(codes)
     iters, batch_size, channels, height, width = codes.size()
@@ -77,20 +80,23 @@ def decoder_test(input,output_dir,model,iterations,rnn_type, use_cuda=True, netw
             output, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4 = decoder(
                 codes[iters], decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
             image = image + output.data.cpu()
-
+            image_save = image[:, :, :-delta_h, :-delta_w]
+            #from IPython import embed
+            #embed()
             imsave(
                 os.path.join(output_dir, '{:02d}.png'.format(iters)),
-                np.squeeze(image.numpy().clip(0, 1) * 255.0).astype(np.uint8)
+                np.squeeze(image_save.numpy().clip(0, 1) * 255.0).astype(np.uint8)
                     .transpose(1, 2, 0))
     else:
         for iters in range(min(iterations, codes.size(0))):
             output, decoder_h_0, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4 = decoder(
                 codes[iters], decoder_h_0, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
             image = image + output.data.cpu()
+            image_save = image[:, :, :-delta_h, :-delta_w]
 
             imsave(
                 os.path.join(output_dir, '{:02d}.png'.format(iters)),
-                np.squeeze(image.numpy().clip(0, 1) * 255.0).astype(np.uint8)
+                np.squeeze(image_save.numpy().clip(0, 1) * 255.0).astype(np.uint8)
                     .transpose(1, 2, 0))
 
     return min(iterations, codes.size(0))

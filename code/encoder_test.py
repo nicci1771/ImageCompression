@@ -143,6 +143,11 @@ def encoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True, net
         #print('Iter: {:02d}; Loss: {:.06f}'.format(iters, res.data.abs().mean()))
 
     codes = (np.stack(codes).astype(np.int8) + 1) // 2
-
     export = np.packbits(codes.reshape(-1))
-    np.savez_compressed(output_path, shape=codes.shape, codes=export)
+    delta_h = new_h - h
+    delta_w = new_w - w
+    delta = np.array([delta_h, delta_w], dtype = np.uint8)
+    #export = np.append(delta, export)
+    #binary_delta = np.binary_repr(delta_h, width=5) + np.binary_repr(delta_w, width=5)
+    #binary_delta_numpy = [eachbit for eachbit in binary_delta]
+    np.savez_compressed(output_path, shape=codes.shape, codes=export, delta = delta)

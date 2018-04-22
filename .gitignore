@@ -8,3 +8,4 @@ __pycache__
 *.npz
 compression_residual_gru
 dataset-generated
+images

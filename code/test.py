@@ -45,6 +45,8 @@ def main():
     encoder_model = 'checkpoint/{}_{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type,args.code_size, args.encodermodel)
     decoder_model = 'checkpoint/{}_{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.decodermodel)
     #cnt = 0
+    total_psnr = 0.0
+    total_ssim = 0.0
     for filename in tqdm(os.listdir(args.input)):
         """
         if cnt < 11:
@@ -80,8 +82,13 @@ def main():
                 ssim_score = msssim(args.input+filename, decoded_img_path)
                 psnr_score = psnr(args.input+filename, decoded_img_path)
                 print("ssim: "+str(ssim_score)+" , psnr: "+str(psnr_score))
-            
             #print('decode time is {}'.format(time.time() - encoded_time))
+            total_psnr = total_psnr + psnr_score
+            total_ssim = total_ssim + ssim_score
+
+    avg_psnr = total_psnr / len(os.listdir(args.input))
+    avg_ssim = total_ssim / len(os.listdir(args.input))
+    print("avg ssim: "+str(avg_ssim)+" , avg psnr:" +str(avg_psnr))
 
 if __name__ == '__main__':
     main()
