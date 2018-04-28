@@ -83,7 +83,7 @@ def main():
     torch.manual_seed(23)
     scheduler = LS.MultiStepLR(optimizer, milestones=[3, 10, 20, 50, 100], gamma=0.5)
 
-    for epoch in range(args.start_epoch, args.start_epoch+args.epochs):
+    for epoch in range(start_epoch, start_epoch+args.epochs):
         scheduler.step()
         train(train_loader, encoder, binarizer, decoder, epoch, optimizer)
         if epoch % args.save_freq == 0 or epoch == args.epochs-1:

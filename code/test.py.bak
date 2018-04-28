@@ -57,7 +57,7 @@ def main():
             filename_new = filename.replace(' ','_')
             print('encoding ' + filename)
             if args.bybatch:
-                encoder_test_batch(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
+                encoder_test_batch(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network)
             else:
                 encoder_test(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
             encoded_time = time.time()
@@ -70,7 +70,7 @@ def main():
             if args.bybatch:
                 iter_num = decoder_test_batch(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
-                    decoder_model, args.decoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
+                    decoder_model, args.decoderiterations, args.rnn_type, args.cuda, args.network)
             else:
                 iter_num = decoder_test(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
