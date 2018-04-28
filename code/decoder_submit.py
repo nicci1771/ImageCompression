@@ -9,13 +9,10 @@ import torch
 from torch.autograd import Variable
 
 import compression_net
-def decoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
+def decoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True, code_size=32):
     content = np.load(input)
     codes = np.unpackbits(content['codes'])
     codes = np.reshape(codes, content['shape']).astype(np.float32) * 2 - 1
-    delta = content['delta']
-    delta_h = int(delta[0])
-    delta_w = int(delta[1])
 
     codes = torch.from_numpy(codes)
     iters, batch_size, channels, height, width = codes.size()
@@ -24,7 +21,7 @@ def decoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
 
     codes = Variable(codes, volatile=True)
 
-    decoder = compression_net.CompressionDecoder(rnn_type)
+    decoder = compression_net.CompressionDecoder(rnn_type, code_size)
     decoder.eval()
 
     if use_cuda:
@@ -70,11 +67,12 @@ def decoder_test(input,output_path,model,iterations,rnn_type, use_cuda=True):
                 codes[iters], decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
         image = image + output.data.cpu()
 
-    image = image[:, :, :-delta_h, :-delta_w]
     imsave(output_path, np.squeeze(image.numpy().clip(0, 1) * 255.0).astype(np.uint8)
                     .transpose(1, 2, 0))
 
 
-decoder_model = 'decoder.pth'
+use_cuda = True
+code_size = 6
+decoder_model = 'decoder_{}.pth'.format(code_size)
 for image_file in glob('images/*.npz'):
-    decoder_test(image_file, image_file[:-3]+'png', decoder_model, 8, 'GRU', False)
+    decoder_test(image_file, image_file[:-3]+'png', decoder_model, 8, 'GRU', use_cuda=use_cuda, code_size=code_size)

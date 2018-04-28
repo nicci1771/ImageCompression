@@ -10,7 +10,7 @@ from IPython import embed
 
 RESHAPE_W = 32
 RESHAPE_H = 32
-def encoder_test_batch(input, output_path, model, iterations, rnn_type, use_cuda = True, network = 'Big'):
+def encoder_test_batch(input, output_path, model, iterations, rnn_type, use_cuda = True, network = 'Big', code_size=32):
     raw_image = imread(input, mode='RGB')
     h, w, c = raw_image.shape
     new_h = (h // 32 +1)* 32
@@ -30,7 +30,7 @@ def encoder_test_batch(input, output_path, model, iterations, rnn_type, use_cuda
         img_ = np.transpose(img_, (0, 3, 1, 2))
         img_ = torch.from_numpy(img_.astype(np.float32) / 255.0)
         batch_size, input_channels, height, width = img_.size()
-        code = encoder_test_each(img_, model, iterations, rnn_type, use_cuda, network)
+        code = encoder_test_each(img_, model, iterations, rnn_type, use_cuda, network, code_size)
         final_code.append(code)
         #final_code = torch.cat((final_code, code), 1)
     final_code = np.stack(final_code)
@@ -43,7 +43,7 @@ def encoder_test_batch(input, output_path, model, iterations, rnn_type, use_cuda
     np.savez_compressed(output_path, shape=final_code.shape, codes=export)
 
    
-def encoder_test_each(image,model,iterations,rnn_type, use_cuda=True, network = 'Big'):
+def encoder_test_each(image,model,iterations,rnn_type, use_cuda=True, network = 'Big', code_size=32):
     batch_size, channel, height, width = image.shape
     assert height % 32 == 0 and width % 32 == 0
 
@@ -51,8 +51,8 @@ def encoder_test_each(image,model,iterations,rnn_type, use_cuda=True, network = 
 
     if network == 'Big':
         encoder = compression_net.CompressionEncoder(rnn_type = rnn_type)
-        binarizer = compression_net.CompressionBinarizer()
-        decoder = compression_net.CompressionDecoder(rnn_type = rnn_type)
+        binarizer = compression_net.CompressionBinarizer(code_size)
+        decoder = compression_net.CompressionDecoder(rnn_type = rnn_type, code_size=code_size)
     else:
         encoder = compression_net_smaller.CompressionEncoder(rnn_type = rnn_type)
         binarizer = compression_net_smaller.CompressionBinarizer()

@@ -67,11 +67,11 @@ def main():
         if os.path.isdir('checkpoint'):
             print("=> loading checkpoint '{}'".format(args.resume))
             encoder.load_state_dict(
-                torch.load('checkpoint/{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
+                torch.load('checkpoint/{}_{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.resume)))
             binarizer.load_state_dict(
-                torch.load('checkpoint/{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
+                torch.load('checkpoint/{}_{}_{}/binarizer_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.resume)))
             decoder.load_state_dict(
-                torch.load('checkpoint/{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.resume)))
+                torch.load('checkpoint/{}_{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.resume)))
             #args.start_epoch = checkpoint['epoch']
             #model.load_state_dict(checkpoint['state_dict'])
             #optimizer.load_state_dict(checkpoint['optimizer'])
@@ -83,7 +83,7 @@ def main():
     torch.manual_seed(23)
     scheduler = LS.MultiStepLR(optimizer, milestones=[3, 10, 20, 50, 100], gamma=0.5)
 
-    for epoch in range(args.start_epoch, args.start_epoch+args.epochs):
+    for epoch in range(start_epoch, start_epoch+args.epochs):
         scheduler.step()
         train(train_loader, encoder, binarizer, decoder, epoch, optimizer)
         if epoch % args.save_freq == 0 or epoch == args.epochs-1:

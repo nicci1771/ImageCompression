@@ -27,7 +27,7 @@ def main():
         if is_image_file(filename):
             filename_new = filename.replace(' ','_')
             output_path_dir = args.OutputImage
-            #output_path_dir = output_path_dir[:-4]+'/'
+            output_path_dir = output_path_dir[:-4]+'/'
             if not os.path.exists(output_path_dir):
                 os.makedirs(output_path_dir)
             

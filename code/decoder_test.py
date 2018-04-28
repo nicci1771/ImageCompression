@@ -81,8 +81,7 @@ def decoder_test(input,output_dir,model,iterations,rnn_type, use_cuda=True, netw
                 codes[iters], decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
             image = image + output.data.cpu()
             image_save = image[:, :, :-delta_h, :-delta_w]
-            #from IPython import embed
-            #embed()
+
             imsave(
                 os.path.join(output_dir, '{:02d}.png'.format(iters)),
                 np.squeeze(image_save.numpy().clip(0, 1) * 255.0).astype(np.uint8)
@@ -93,7 +92,6 @@ def decoder_test(input,output_dir,model,iterations,rnn_type, use_cuda=True, netw
                 codes[iters], decoder_h_0, decoder_h_1, decoder_h_2, decoder_h_3, decoder_h_4)
             image = image + output.data.cpu()
             image_save = image[:, :, :-delta_h, :-delta_w]
-
             imsave(
                 os.path.join(output_dir, '{:02d}.png'.format(iters)),
                 np.squeeze(image_save.numpy().clip(0, 1) * 255.0).astype(np.uint8)

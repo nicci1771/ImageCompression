@@ -14,20 +14,20 @@ from tqdm import tqdm
 from IPython import embed
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--encodermodel', type=int, default = 199,  help='path to model')
-parser.add_argument('--decodermodel', type=int, default = 199, help='path to model')
+parser.add_argument('--encodermodel', type=int, default = 200,  help='path to model')
+parser.add_argument('--decodermodel', type=int, default = 200, help='path to model')
 parser.add_argument('--input', '-i', type=str, 
-        default = '../data/test/', help='input dir')
+        default = '../data/valid/', help='input dir')
 parser.add_argument('--OutputCode', type=str, 
         default = 'result/codes/', help='output codes dir')
 parser.add_argument('--OutputImage', type=str, 
         default = 'result/decode_image/', help='output image dir')
 parser.add_argument('--cuda', '-g', action='store_true', help='enables cuda')
-parser.add_argument('--encoderiterations', type=int, default=8, help='unroll iterations')
-parser.add_argument('--decoderiterations', type=int, default=8, help='unroll iterations')
-parser.add_argument('--rnn-type', type=str, default='LSTM', help='LSTM or GRU')
-parser.add_argument('--loss-type', type=str, default='L1', help='L1, L2 or SSIM')
-parser.add_argument('--code-size', type=int, default=32)
+parser.add_argument('--encoderiterations', type=int, default=4, help='unroll iterations')
+parser.add_argument('--decoderiterations', type=int, default=4, help='unroll iterations')
+parser.add_argument('--rnn-type', type=str, default='GRU', help='LSTM or GRU')
+parser.add_argument('--loss-type', type=str, default='SSIM', help='L1, L2 or SSIM')
+parser.add_argument('--code-size', type=int, default=4)
 parser.add_argument('--bybatch', default=False, action='store_true')
 parser.add_argument('--network', type=str, default='Big', help='big or small')
 
@@ -45,8 +45,6 @@ def main():
     encoder_model = 'checkpoint/{}_{}_{}/encoder_{:08d}.pth'.format(args.rnn_type, args.loss_type,args.code_size, args.encodermodel)
     decoder_model = 'checkpoint/{}_{}_{}/decoder_{:08d}.pth'.format(args.rnn_type, args.loss_type, args.code_size, args.decodermodel)
     #cnt = 0
-    total_psnr = 0.0
-    total_ssim = 0.0
     for filename in tqdm(os.listdir(args.input)):
         """
         if cnt < 11:
@@ -59,7 +57,7 @@ def main():
             filename_new = filename.replace(' ','_')
             print('encoding ' + filename)
             if args.bybatch:
-                encoder_test_batch(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network)
+                encoder_test_batch(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
             else:
                 encoder_test(args.input+filename, args.OutputCode+filename_new.replace('png','npz'), encoder_model, args.encoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
             encoded_time = time.time()
@@ -72,7 +70,7 @@ def main():
             if args.bybatch:
                 iter_num = decoder_test_batch(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
-                    decoder_model, args.decoderiterations, args.rnn_type, args.cuda, args.network)
+                    decoder_model, args.decoderiterations, args.rnn_type, args.cuda, args.network, args.code_size)
             else:
                 iter_num = decoder_test(args.OutputCode+filename_new.replace('png','npz'), 
                     output_path_dir,
@@ -82,13 +80,8 @@ def main():
                 ssim_score = msssim(args.input+filename, decoded_img_path)
                 psnr_score = psnr(args.input+filename, decoded_img_path)
                 print("ssim: "+str(ssim_score)+" , psnr: "+str(psnr_score))
+            
             #print('decode time is {}'.format(time.time() - encoded_time))
-            total_psnr = total_psnr + psnr_score
-            total_ssim = total_ssim + ssim_score
-
-    avg_psnr = total_psnr / len(os.listdir(args.input))
-    avg_ssim = total_ssim / len(os.listdir(args.input))
-    print("avg ssim: "+str(avg_ssim)+" , avg psnr:" +str(avg_psnr))
 
 if __name__ == '__main__':
     main()
