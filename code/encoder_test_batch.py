@@ -137,7 +137,7 @@ def encoder_test_each(image,model,iterations,rnn_type, use_cuda=True, network = 
         #res = ori_res - output
         codes.append(code.data.cpu().numpy())
 
-        print('Iter: {:02d}; Loss: {:.06f}'.format(iters, res.data.abs().mean()))
+        #print('Iter: {:02d}; Loss: {:.06f}'.format(iters, res.data.abs().mean()))
     codes = (np.stack(codes).astype(np.int8) + 1) // 2
     #export = np.packbits(codes.reshape(-1))
     #np.savez_compressed(output_path, shape=codes.shape, codes=export)

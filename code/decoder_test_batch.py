@@ -9,6 +9,7 @@ from torch.autograd import Variable
 
 import compression_net
 import compression_net_smaller
+from IPython import embed
 
 def decoder_test_batch(input,output_dir,model,iterations,rnn_type, use_cuda=True, network='Big', code_size=32):
     content = np.load(input)
@@ -24,7 +25,7 @@ def decoder_test_batch(input,output_dir,model,iterations,rnn_type, use_cuda=True
     codes = torch.from_numpy(codes)
     final_image = []
     for i in range(h_num):
-        print('Deocding line {}'.format(i))
+        #print('Deocding line {}'.format(i))
         images = decoder_test_each(codes[i], output_dir, model, rnn_type, use_cuda, iterations, network, code_size)
         final_image.append(images)
     final_image = np.array(final_image)
