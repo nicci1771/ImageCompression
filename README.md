@@ -1,1 +1,1 @@
-# ImageCompression
+# ImageCompression using pytorch
